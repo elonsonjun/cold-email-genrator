@@ -32,3 +32,5 @@ cd cold-email-genrator
 
 npm install
 npm run
+VITE_API_URL=https://your-llm-api.com
+VITE_API_KEY="your_api_key_here"
