@@ -47,6 +47,7 @@ const TemplateManager = ({ onSelectTemplate, selectedTemplate }: TemplateManager
     tags: [],
   });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [tagInput, setTagInput] = useState('');
   
   useEffect(() => {
     if (!selectedTemplate && templates.length > 0) {
@@ -64,8 +65,7 @@ const TemplateManager = ({ onSelectTemplate, selectedTemplate }: TemplateManager
       return;
     }
     
-    const tagString = (newTemplate.tags as unknown as string) || '';
-    const tagArray = tagString.split(',').map(tag => tag.trim());
+    const tagArray = tagInput.split(',').map(tag => tag.trim()).filter(Boolean);
     
     const template: EmailTemplate = {
       id: Date.now().toString(),
@@ -77,6 +77,7 @@ const TemplateManager = ({ onSelectTemplate, selectedTemplate }: TemplateManager
     
     setTemplates([...templates, template]);
     setNewTemplate({ name: '', content: '', tags: [] });
+    setTagInput('');
     setIsDialogOpen(false);
     
     toast({
@@ -129,8 +130,8 @@ const TemplateManager = ({ onSelectTemplate, selectedTemplate }: TemplateManager
                 <Label htmlFor="templateTags">Tags (comma separated)</Label>
                 <Input
                   id="templateTags"
-                  value={newTemplate.tags as unknown as string}
-                  onChange={(e) => setNewTemplate({...newTemplate, tags: e.target.value})}
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
                   placeholder="sales, follow-up, introduction"
                 />
               </div>
