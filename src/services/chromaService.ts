@@ -1,55 +1,173 @@
 
-// This is a simulated ChromaDB service for the frontend
-// In a real application, this would connect to a backend service with ChromaDB
-
+// This is a real ChromaDB service connecting to a backend API
 import { EmailTemplate } from "@/lib/types";
 
-// Simulate a vector database with in-memory storage
-class ChromaDBSimulation {
-  private templates: Map<string, EmailTemplate> = new Map();
-  private vectors: Map<string, number[]> = new Map();
+class ChromaDBService {
+  private baseUrl: string;
+  private apiKey: string | null;
+  private collectionName: string;
   
-  // Add a template to the "database"
+  constructor() {
+    // In a production app, these would come from env variables
+    this.baseUrl = "/api/chroma"; // Endpoint for your backend service
+    this.apiKey = null; // Will be set by user
+    this.collectionName = "email_templates";
+  }
+  
+  setApiKey(key: string) {
+    this.apiKey = key;
+    return this;
+  }
+  
+  // Add a template to ChromaDB
   async addTemplate(template: EmailTemplate): Promise<void> {
-    this.templates.set(template.id, template);
+    if (!this.apiKey) {
+      throw new Error("API key must be set before using ChromaDB");
+    }
     
-    // Simulate vector embedding
-    const fakeVector = Array.from({ length: 384 }, () => Math.random());
-    this.vectors.set(template.id, fakeVector);
-    
-    console.log(`[ChromaDB] Template added: ${template.name}`);
-    return Promise.resolve();
+    try {
+      const response = await fetch(`${this.baseUrl}/add`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`
+        },
+        body: JSON.stringify({
+          id: template.id,
+          document: template.content,
+          metadata: {
+            name: template.name,
+            tags: template.tags,
+            createdAt: template.createdAt.toISOString()
+          },
+          collection: this.collectionName
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to add template: ${response.statusText}`);
+      }
+      
+      console.log(`[ChromaDB] Template added: ${template.name}`);
+      return;
+    } catch (error) {
+      console.error('[ChromaDB] Error adding template:', error);
+      throw error;
+    }
   }
   
   // Get template by ID
   async getTemplateById(id: string): Promise<EmailTemplate | null> {
-    const template = this.templates.get(id);
-    return Promise.resolve(template || null);
+    if (!this.apiKey) {
+      throw new Error("API key must be set before using ChromaDB");
+    }
+    
+    try {
+      const response = await fetch(`${this.baseUrl}/get?id=${id}&collection=${this.collectionName}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to get template: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      if (!data || !data.document) {
+        return null;
+      }
+      
+      return {
+        id: id,
+        name: data.metadata.name,
+        content: data.document,
+        tags: data.metadata.tags || [],
+        createdAt: new Date(data.metadata.createdAt)
+      };
+    } catch (error) {
+      console.error('[ChromaDB] Error getting template:', error);
+      return null;
+    }
   }
   
   // Find similar templates based on query text
   async findSimilarTemplates(query: string, limit = 5): Promise<EmailTemplate[]> {
-    // Simulate semantic search
-    console.log(`[ChromaDB] Searching for templates similar to: "${query}"`);
+    if (!this.apiKey) {
+      throw new Error("API key must be set before using ChromaDB");
+    }
     
-    // Just return random templates since this is a simulation
-    const templatesArray = Array.from(this.templates.values());
-    templatesArray.sort(() => Math.random() - 0.5);
-    
-    return Promise.resolve(templatesArray.slice(0, limit));
+    try {
+      console.log(`[ChromaDB] Searching for templates similar to: "${query}"`);
+      
+      const response = await fetch(`${this.baseUrl}/query`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`
+        },
+        body: JSON.stringify({
+          queryText: query,
+          collection: this.collectionName,
+          limit: limit
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to query templates: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      if (!Array.isArray(data.results)) {
+        return [];
+      }
+      
+      return data.results.map((item: any) => ({
+        id: item.id,
+        name: item.metadata.name,
+        content: item.document,
+        tags: item.metadata.tags || [],
+        createdAt: new Date(item.metadata.createdAt)
+      }));
+    } catch (error) {
+      console.error('[ChromaDB] Error finding similar templates:', error);
+      return [];
+    }
   }
   
-  // Initialize with some templates
+  // Initialize with templates (batch upload)
   async initWithTemplates(templates: EmailTemplate[]): Promise<void> {
     for (const template of templates) {
       await this.addTemplate(template);
     }
     console.log(`[ChromaDB] Initialized with ${templates.length} templates`);
-    return Promise.resolve();
+    return;
+  }
+  
+  // Check if the service is configured and connected
+  async testConnection(): Promise<boolean> {
+    if (!this.apiKey) {
+      return false;
+    }
+    
+    try {
+      const response = await fetch(`${this.baseUrl}/health`, {
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`
+        }
+      });
+      
+      return response.ok;
+    } catch {
+      return false;
+    }
   }
 }
 
 // Singleton instance
-const chromaDB = new ChromaDBSimulation();
+const chromaDB = new ChromaDBService();
 
 export default chromaDB;
