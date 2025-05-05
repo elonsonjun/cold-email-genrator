@@ -90,6 +90,15 @@ const TemplateManager = ({ onSelectTemplate, selectedTemplate }: TemplateManager
     }
   };
   
+  // Function to format the preview text nicely
+  const formatPreviewText = (text: string, maxLength: number = 100): string => {
+    // Replace newlines with spaces
+    const flattenedText = text.replace(/\n+/g, ' ');
+    // Truncate if necessary
+    if (flattenedText.length <= maxLength) return flattenedText;
+    return flattenedText.substring(0, maxLength) + '...';
+  };
+  
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -154,9 +163,9 @@ const TemplateManager = ({ onSelectTemplate, selectedTemplate }: TemplateManager
               onClick={() => onSelectTemplate(template)}
             >
               <CardContent className="p-4">
-                <h3 className="font-medium truncate">{template.name}</h3>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {template.content.substring(0, 60)}...
+                <h3 className="font-medium text-base mb-2">{template.name}</h3>
+                <p className="text-xs text-muted-foreground line-clamp-3 mb-3 whitespace-pre-line">
+                  {formatPreviewText(template.content)}
                 </p>
                 <div className="flex gap-1 flex-wrap mt-2">
                   {template.tags.map((tag, idx) => (
