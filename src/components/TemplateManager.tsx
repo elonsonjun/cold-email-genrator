@@ -32,7 +32,7 @@ const SAMPLE_TEMPLATES: EmailTemplate[] = [
   {
     id: '3',
     name: 'Referral Introduction',
-    content: 'Hi {{recipient.name}},\n\nI hope this email finds you well. I was recently speaking with [Mutual Connection], who suggested I reach out to you regarding {{recipient.painPoint}}.\n\nAt [Your Company], we've helped several companies in the {{recipient.industry}} industry address similar challenges. I'd love to share how we might be able to help {{recipient.company}} as well.\n\nWould you be available for a quick call next week?\n\nBest regards,\n[Your Name]',
+    content: "Hi {{recipient.name}},\n\nI hope this email finds you well. I was recently speaking with [Mutual Connection], who suggested I reach out to you regarding {{recipient.painPoint}}.\n\nAt [Your Company], we've helped several companies in the {{recipient.industry}} industry address similar challenges. I'd love to share how we might be able to help {{recipient.company}} as well.\n\nWould you be available for a quick call next week?\n\nBest regards,\n[Your Name]",
     tags: ['referral', 'introduction', 'mutual connection'],
     createdAt: new Date(),
   }
